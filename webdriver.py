@@ -12,7 +12,7 @@ firefox_options = Options()
 firefox_options.add_argument("--disable-infobars")
 firefox_options.add_argument("--disable-extensions")
 firefox_options.add_argument("--disable-popup-blocking")
-
+firefox_options.add_argument("--headless")
 profile_options = FirefoxProfile()
 user_agent = 'Mozilla/5.0 (Macintosh; Intel Mac OS X 11.5; rv:90.0) Gecko/20100101 Firefox/90.0'
 profile_options.set_preference('profile_options = FirefoxProfile()', user_agent)

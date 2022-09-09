@@ -41,11 +41,9 @@ class BaseScraper(object):
 
     def get_last_page(self, data_url):
         url = "%s%s" %(self.base_url, data_url)
-        print(url)
         soup_obj = self.soup_base_session(url)
         link = soup_obj.find("li", attrs={"class": "page-item last"}).find('a')
         last_data_page = link['data-page']
-        print(last_data_page)
         return last_data_page
 
     def get_available_location(self, service):
@@ -55,8 +53,6 @@ class BaseScraper(object):
     def dump_availale_service_location(self):
         data_list = dict()
         for service in self.clutch_list_of_services:
-            print(service['service_name'])
-            print("?>?>?>?>?>?", list( map(itemgetter(0), self.get_available_location(service['service_name']) )))
             data_list.update(
                 {
                     service['service_name']: list( map(itemgetter(0), self.get_available_location(service['service_name']) ))
@@ -96,11 +92,11 @@ class BaseScraper(object):
 
         if service_data_url is None:
             raise Exception("No data Url found for the service name")
-        service_url = f"{self.base_url}{service_data_url}"
+        base_service_url = f"{self.base_url}{service_data_url}"
 
         if location is not None:
             #loc_id = self.get_location_id_from_name(location[1])
-            service_url = f"{self.base_url}{service_data_url}?geona_id={location[1]}"
+            base_service_url = f"{self.base_service_url}{service_data_url}?geona_id={location[1]}"
             dump_file = f"{dump_file}_{location[0].split(',')[0]}"
 
         if page_no:
@@ -109,7 +105,7 @@ class BaseScraper(object):
             last_page=4
         data_list = list()
         for page in range(last_page):
-            service_url = f"{service_url}?page={page}"
+            service_url = f"{base_service_url}?page={page}"
             soup_obj = self.soup_base_session(service_url)
             links = soup_obj.find_all("li", attrs={"class": "provider provider-row sponsor"})
             for link in links:
@@ -147,41 +143,14 @@ class BaseScraper(object):
 
 
 
-# with requests.session() as s:
-#     soup = bs(s.post(base_url).content, "html.parser")
-#     links = soup.find_all("li", attrs={"class": "provider provider-row sponsor"})
-#     for link in links:
-#         name = link.find("a", attrs={"data-link_text": "Profile Title"})
-#         company_url = link.find("a", attrs={"class": "website-link__item"})
-#         locality = link.find("span", attrs={"class": "locality"})
-#         rating = link.find("span", attrs={"class": "rating sg-rating__number"})
-#         rating_count = link.find('a', attrs={'data-link_text': "Reviews Count"})
-#         hourly_rate = link.find('div', attrs={'data-content': "<i>Avg. hourly rate</i>"}).find('span')
-#         min_project_size = link.find('div', attrs={'data-content': "<i>Min. project size</i>"}).find('span')
-#         employee_size = link.find('div', attrs={'data-content': "<i>Employees</i>"}).find('span')
-#         details_url = f"https://clutch.co/profile/{name.text.strip().lower()}/#summary"
-#         company_dt_soup = bs(s.post(details_url).content, "html.parser")
-        
-#         contact = company_dt_soup.find_all("h3", attrs={"class": "error-type"})
 
-    
-#     print(name.text.strip())
-#     print(company_url['href'])
-#     print(locality.text.strip())
-#     print(rating.text.strip())
-#     print(rating_count.text.strip())
-#     print(hourly_rate.text.strip())
-#     print(min_project_size.text.strip())
-#     print(employee_size.text.strip())
-#     print(details_url)
-#     print(contact)
 
 
 
 if __name__=="__main__":
     base_obj = BaseScraper(BASE_URL)
     services = base_obj.clutch_list_of_services
-    base_obj.dump_availale_service_location()
+    #base_obj.dump_availale_service_location()
     
     for service in services:
         last_page = base_obj.get_last_page(service['data_url'])
