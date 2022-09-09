@@ -152,14 +152,17 @@ if __name__=="__main__":
     services = base_obj.clutch_list_of_services
     #base_obj.dump_availale_service_location()
     
-    for service in services:
+    for service in services[:2]:
         last_page = base_obj.get_last_page(service['data_url'])
         base_obj.scrape_data(service['service_name'])
         #Scrape data location wise and page_wise
         '''
-        available_locs = base_obj.get_available_location(service)
-        for location in available_locs:
-            base_obj.scrape_data(service['service_name'], location, last_page)
+        for service in services:
+            last_page = base_obj.get_last_page(service['data_url'])
+            base_obj.scrape_data(service['service_name'])
+            available_locs = base_obj.get_available_location(service)
+            for location in available_locs:
+                base_obj.scrape_data(service['service_name'], location, last_page)
         '''
 
     #base_obj.scrape_data('Mobile App Development')
