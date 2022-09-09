@@ -40,7 +40,6 @@ def find_firm_contact(url):
 
     driver.get(url)
     x=driver.find_element(By.XPATH, "//*[@class='tel']/.//span[contains(@class,'value')]")
-    print(".................", x.get_attribute('innerHTML'))
     contact = x.get_attribute('innerHTML')
     driver.close()
     return contact
@@ -65,8 +64,6 @@ def get_service_location(url, service):
     ids=driver.find_elements_by_xpath('//input[contains(@name, "location")]')
     location_id_list = [id.get_attribute('value') for id in ids]
     location_id_list.pop(0)
-    print(location_list)
-    print(location_id_list)
     zipped_location = zip(location_list, location_id_list)
     driver.close()
     return zipped_location

@@ -1,5 +1,6 @@
 import requests
 import pandas as pd
+from operator import itemgetter
 from bs4 import BeautifulSoup as bs
 from webdriver import get_service_location, find_firm_contact
 
@@ -32,8 +33,11 @@ class BaseScraper(object):
                     'data_url': service_data_url['data-url']
                 } 
             )
-        print(services)
+        df = pd.DataFrame.from_dict(services)
+        df.to_csv('clutch_services.csv')
         return services
+    
+    
 
     def get_last_page(self, data_url):
         url = "%s%s" %(self.base_url, data_url)
@@ -46,6 +50,22 @@ class BaseScraper(object):
 
     def get_available_location(self, service):
         return get_service_location(self.base_url, service)
+    
+
+    def dump_availale_service_location(self):
+        data_list = dict()
+        for service in self.clutch_list_of_services:
+            print(service['service_name'])
+            print("?>?>?>?>?>?", list( map(itemgetter(0), self.get_available_location(service['service_name']) )))
+            data_list.update(
+                {
+                    service['service_name']: list( map(itemgetter(0), self.get_available_location(service['service_name']) ))
+                }
+            )
+            print(data_list)
+        df = pd.DataFrame(data_list)
+        df.to_csv('service_with_available.csv')
+        print(data_list)         
     
     def find_service_data_url(self, service_name):
         service_data_url = None
@@ -72,18 +92,21 @@ class BaseScraper(object):
     def scrape_data(self, service_name, location=None, page_no=False):
         service_data_url = self.find_service_data_url(service_name)
         service_last_page = self.get_last_page(service_data_url)
+        dump_file = f"{service_name}.csv"
+
         if service_data_url is None:
             raise Exception("No data Url found for the service name")
         service_url = f"{self.base_url}{service_data_url}"
 
         if location is not None:
-            loc_id = get_location_id_from_name(location)
-            service_url = f"{self.base_url}{service_data_url}?geona_id={loc_id}"
+            #loc_id = self.get_location_id_from_name(location[1])
+            service_url = f"{self.base_url}{service_data_url}?geona_id={location[1]}"
+            dump_file = f"{dump_file}_{location[0].split(',')[0]}"
 
         if page_no:
             last_page=service_last_page
         else:
-            last_page=1
+            last_page=4
         data_list = list()
         for page in range(last_page):
             service_url = f"{service_url}?page={page}"
@@ -105,20 +128,20 @@ class BaseScraper(object):
 
                 print(contact_no)
 
-            data_list.append(
-                {
-                    "name": name.text.strip(),
-                    "company_url": company_url['href'],
-                    "locality": locality.text.strip(),
-                    "rating": rating.text.strip(),
-                    "hourly_rate": hourly_rate.text.strip(),
-                    "min_project_size": min_project_size.text.strip(),
-                    "employee_size": employee_size.text.strip(),
-                    "contact": contact_no
-                }
-            )
+                data_list.append(
+                    {
+                        "name": name.text.strip(),
+                        "company_url": company_url['href'],
+                        "locality": locality.text.strip(),
+                        "rating": rating.text.strip(),
+                        "hourly_rate": hourly_rate.text.strip(),
+                        "min_project_size": min_project_size.text.strip(),
+                        "employee_size": employee_size.text.strip(),
+                        "contact": contact_no
+                    }
+                )
         df = pd.DataFrame.from_dict(data_list)
-        df.to_csv('temp.csv')
+        df.to_csv(dump_file)
 
 
 
@@ -154,10 +177,20 @@ class BaseScraper(object):
 #     print(contact)
 
 
-base_obj = BaseScraper(BASE_URL)
-# base_obj.clutch_list_of_services
-# base_obj.get_last_page('/directory/mobile-application-developers')
-# print(base_obj.get_available_location('Mobile App Development'))
-base_obj.scrape_data('Mobile App Development')
 
-#base_obj.get_location_id_from_name('Gurgaon', 'Mobile App Development')
+if __name__=="__main__":
+    base_obj = BaseScraper(BASE_URL)
+    services = base_obj.clutch_list_of_services
+    base_obj.dump_availale_service_location()
+    
+    for service in services:
+        last_page = base_obj.get_last_page(service['data_url'])
+        base_obj.scrape_data(service['service_name'])
+        #Scrape data location wise and page_wise
+        '''
+        available_locs = base_obj.get_available_location(service)
+        for location in available_locs:
+            base_obj.scrape_data(service['service_name'], location, last_page)
+        '''
+
+    #base_obj.scrape_data('Mobile App Development')
